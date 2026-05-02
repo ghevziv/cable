@@ -1,834 +1,475 @@
-'use client'
+‘use client’
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from ‘react’;
 
-const FONT_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@300;400;500;600;700&display=swap');
-  
-  * { -webkit-tap-highlight-color: transparent; }
-  
-  .font-display { font-family: 'Frank Ruhl Libre', serif; }
-  .font-body { font-family: 'Heebo', system-ui, sans-serif; }
-  textarea, input { font-family: 'Heebo', system-ui, sans-serif; }
-  
-  .output-pre { font-family: 'Heebo', system-ui, sans-serif; white-space: pre-wrap; line-height: 1.85; }
-  
-  .pulse-dot { animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.3; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.1); }
-  }
-  .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
-  .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
-  
-  .fade-in { animation: fadeIn 0.4s ease-out; }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .recording-pulse { animation: recordingPulse 1.6s ease-in-out infinite; }
-  @keyframes recordingPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
-    50% { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
-  }
-`;
+const CLARIFYING_QUESTIONS_PROMPT = `אתה פסיכיאטר בכיר מנחה. קיבלת תיאור גולמי של מקרה פסיכיאטרי ממיון. צור 6-10 שאלות הבהרה קריטיות.
 
-const MODES = {
-  intake: {
-    label: 'קבלת מיון',
-    short: 'קבלה',
-    icon: '📋',
-    description: 'קבלה מובנית למיון - להעתקה לתיק',
-    placeholder: 'הזן או הקלט מידע על המטופל. אל תזין שמות, ת.ז., או פרטים מזהים.',
-    maxTokens: 2500,
-    useQuestionsDefault: true,
-    systemPrompt: `אתה עוזר קליני לפסיכיאטר מתמחה בתורנות מיון בישראל. תפקידך להפיק קבלת מיון פסיכיאטרית מקצועית ומובנית בעברית רפואית.
+חלקן שאלות רב-ברירה (mcq) וחלקן פתוחות (open).
+שאל רק על מידע שלא ברור מהקלט. התמקד בדגלים אדומים, אבחנה, סיכון, וטיפול.
 
-⚠️ פרטיות: אין שמות, ת.ז., תאריכי לידה, כתובות, שמות בני משפחה. השתמש ב-[שם המטופל], [שם בן/בת זוג] וכו'.
+החזר JSON בדיוק בפורמט הזה, ללא טקסט נוסף:
+{
+“questions”: [
+{“id”:“q1”,“text”:“שאלה?”,“type”:“mcq”,“options”:[“אפשרות א”,“אפשרות ב”,“אפשרות ג”]},
+{“id”:“q2”,“text”:“שאלה פתוחה?”,“type”:“open”}
+]
+}`;
+
+const INTAKE_PROMPT = `אתה עוזר קליני לפסיכיאטר מתמחה בתורנות מיון בישראל. הפק קבלת מיון פסיכיאטרית מקצועית בעברית רפואית.
+
+⚠️ פרטיות: אין שמות, ת.ז., תאריכי לידה, כתובות. השתמש ב-[שם המטופל] וכו’.
 ⚠️ תרופות: אסור להמציא מינונים. ⚠️לאימות בסוף כל שורת תרופה.
-⚠️ דגלים אדומים: 🚩 בפתיח הסיכום (אובדנות פעילה, פסיכוזה, סיכון).
-⚠️ מידע חסר: "לבירור" - לעולם לא להמציא.
+⚠️ דגלים: 🚩 בפתיח הסיכום אם יש סיכון.
+⚠️ מידע חסר: “לבירור” — לא להמציא.
 
-פורמט פלט:
+פורמט:
 
 התקבל במסגרת תורנות מיון.
-[הגיע עם הפנייה מ___ / ללא הפנייה]
+[הגיע עם הפנייה / ללא הפנייה]
 [מוכר / לא מוכר למוסדנו]
-הגיע [בליווי ___ / בגפו]
+הגיע [בליווי / בגפו]
 
-[רקע אישי-דמוגרפי - גיל, מצב משפחתי, ילדים, מגורים, תעסוקה, ביטוח לאומי, סל שיקום]
+[רקע דמוגרפי — גיל, משפחה, מגורים, תעסוקה, ביטוח לאומי]
 
-[היסטוריה פסיכיאטרית - אבחנות, אשפוזים, טיפול תרופתי במינונים ⚠️לאימות]
+[היסטוריה פסיכיאטרית + תרופות ⚠️לאימות]
 
-ברקע -
-* גופני - 
-* פסיכופתולוגיה משפחתית - 
-* שימוש בחומרים - 
+ברקע —
 
-מחלה נוכחית -
-[התפתחות והתסמינים, ציטוטים בגרשיים]
-[תשאול ייעודי לפי המצב - מאניה / דיכאון / פסיכוזה / OCD / PTSD / חרדה - רק רלוונטיים]
+- גופני —
+- פסיכופתולוגיה משפחתית —
+- שימוש בחומרים —
+
+מחלה נוכחית —
+[התפתחות, ציטוטים בגרשיים, תשאול ייעודי]
 שולל [תסמינים] בעבר ובהווה.
-אובדנות - [בעבר ובהווה]
+אובדנות — [בעבר ובהווה, תכנית, אמצעי]
 
-תולדות המחלה -
+תולדות המחלה —
 
-תולדות עבר -
+תולדות עבר —
+
+בדיקת מצב נפשי —
+הופעה: | דיבור: | מצב רוח: | אפקט: | חשיבה: | תפיסה: | תובנה: | שיפוט:
 
 לסיכום,
 [רושם קליני, אבחנה מבדלת, רמת סיכון]
 
-בייעוץ עם כונן ד״ר ___ -
+בייעוץ עם כונן ד״ר ___ —
 א.
 ב.
 ג.
 
-📌 חוסרים לבירור:`
-  },
+📌 חוסרים לבירור:`;
 
-  departmentIntake: {
-    label: 'אינטייק מחלקתי',
-    short: 'אינטייק',
-    icon: '📚',
-    description: 'אינטייק מלא ומפורט במחלקה',
-    placeholder: 'הזן או הקלט את כל המידע על המטופל - אנמנזה, MSE, וכו\'.',
-    maxTokens: 4000,
-    useQuestionsDefault: true,
-    systemPrompt: `אתה עוזר קליני לפסיכיאטר מתמחה במחלקה פסיכיאטרית בישראל. הפק אינטייק מחלקתי מלא ומקצועי בעברית רפואית.
-
-⚠️ פרטיות: אין פרטים מזהים. השתמש בפלייסהולדרים.
-⚠️ תרופות: ⚠️לאימות אחרי כל שורה. אין להמציא מינונים.
-⚠️ מידע חסר: "לבירור".
-
-מבנה אינטייק מלא:
-
-═══════════════════════════════
-1. פרטים דמוגרפיים
-═══════════════════════════════
-
-═══════════════════════════════
-2. סיבת הפניה / קבלה
-═══════════════════════════════
-
-═══════════════════════════════
-3. תלונה עיקרית
-═══════════════════════════════
-[במילות המטופל - גרשיים]
-
-═══════════════════════════════
-4. מחלה נוכחית (HPI)
-═══════════════════════════════
-[התפתחות, גורמים מחישים, תסמינים, תפקוד]
-[תשאול סינדרומלי ייעודי]
-שולל:
-אובדנות וסיכון:
-
-═══════════════════════════════
-5. היסטוריה פסיכיאטרית
-═══════════════════════════════
-
-═══════════════════════════════
-6. תרופות נוכחיות
-═══════════════════════════════
-[רשימה עם מינונים ⚠️לאימות, היענות, ת.ל.]
-
-═══════════════════════════════
-7. רקע גופני
-═══════════════════════════════
-
-═══════════════════════════════
-8. שימוש בחומרים
-═══════════════════════════════
-
-═══════════════════════════════
-9. היסטוריה משפחתית
-═══════════════════════════════
-
-═══════════════════════════════
-10. תולדות התפתחותיות ועבר
-═══════════════════════════════
-- לידה והתפתחות:
-- ילדות וטראומות:
-- התבגרות:
-- השכלה:
-- שירות צבאי:
-- חיי זוגיות ומשפחה:
-- תולדות תעסוקתיות:
-- רוחניות / דת:
-- חוקיות:
-
-═══════════════════════════════
-11. אישיות פרה-מורבידית
-═══════════════════════════════
-
-═══════════════════════════════
-12. בדיקת מצב נפשי (MSE)
-═══════════════════════════════
-- הופעה והתנהגות:
-- דיבור:
-- מצב רוח:
-- אפקט:
-- חשיבה - תהליך:
-- חשיבה - תוכן:
-- תפיסה:
-- קוגניציה:
-- תובנה ושיפוט:
-- אובדנות / הומיסידליות:
-
-═══════════════════════════════
-13. סיכום והערכה
-═══════════════════════════════
-אבחנה מבדלת:
-1. עיקרית:
-2. אפשרית:
-3. לשלילה:
-
-ניסוח ביו-פסיכו-סוציאלי:
-- ביולוגי:
-- פסיכולוגי:
-- סוציאלי:
-
-═══════════════════════════════
-14. תוכנית בירור
-═══════════════════════════════
-
-═══════════════════════════════
-📌 חוסרים מהותיים לבירור:
-═══════════════════════════════`
-  },
-  presentation: {
-    label: 'הצגה לבכיר',
-    short: 'הצגה',
-    icon: '🎯',
-    description: 'סיכום קצר להצגה לכונן/בכיר',
-    placeholder: 'הזן או הקלט מידע - יכול להיות הקבלה שכבר נכתבה או מידע גולמי.',
-    maxTokens: 800,
-    useQuestionsDefault: false,
-    systemPrompt: `אתה עוזר לפסיכיאטר תורן בישראל. הפק סיכום קצר וממוקד לצורך הצגה לכונן/בכיר.
+const MONOLOGUE_PROMPT = `אתה עוזר לפסיכיאטר מתמחה בישראל. כתוב מונולוג פורמלי ורהוט להצגה בעל פה לבכיר/כונן.
 
 ⚠️ פרטיות: אין פרטים מזהים.
-⚠️ תרופות: ⚠️לאימות.
+⚠️ אורך: 8-12 משפטים. פסקה אחת רצופה, ללא כותרות.
+⚠️ מבנה: מי המטופל ← למה הגיע ← מה מתרשם ← מה מתוכנן ← מה ההתלבטויות.
 
-פורמט (3-6 משפטים):
+התחל ב”הגיע מטופל…” וסיים ב”…ורציתי להתייעץ בנוגע ל[ההתלבטות המרכזית].”
+טון פורמלי, בטוח, קליני. כאילו עומד מול בכיר.`;
 
-הגיע מטופל בן ___, [פרטים רלוונטיים בלבד], שברקע אבחנה של ___ [+ טיפול ⚠️לאימות].
-הגיע בשביל ___ [סיבת ההגעה].
-מתאר ואני מתרשם היום ש___ [מצב קליני, MSE קצר, סיכון].
-[🚩 דגלים אדומים אם יש]
-אני רוצה לעשות ___ ולהתייעץ בנוגע ל___.
-
-הוראות: ישיר, ממוקד, שפה דבורה-מקצועית.`
-  },
-
-  treatmentPlan: {
-    label: 'תוכנית טיפול',
-    short: 'תוכנית',
-    icon: '🌿',
-    description: 'תוכנית יצירתית - תרופתי, סוציאלי, פסיכותרפויטי',
-    placeholder: 'הזן או הקלט אינטייק / מידע. ככל שיותר - התוכנית מותאמת יותר.',
-    maxTokens: 4000,
-    useQuestionsDefault: true,
-    systemPrompt: `אתה פסיכיאטר בכיר מנוסה ויצירתי. בנה תוכנית טיפול מקיפה, "מגדילת ראש" - חשיבה רחבה ומעמיקה. שלב ראיות עם חשיבה אינטגרטיבית.
+const TREATMENT_PROMPT = `אתה פסיכיאטר בכיר מנוסה. כתוב תוכנית טיפול מעמיקה ויצירתית בשלושה צירים.
 
 ⚠️ פרטיות: אין פרטים מזהים.
-⚠️ תרופות: ⚠️לאימות. ציין משפחות ושיקולים.
+⚠️ תרופות: ⚠️לאימות על כל המלצה. שיקולים ומשפחות — לא מינונים ספציפיים.
 
-═══════════════════════════════
-🧠 ניסוח קליני
-═══════════════════════════════
-[אבחנה ראשית, קו-מורבידיות, ניסוח ביו-פסיכו-סוציאלי]
+💊 ציר תרופתי
+[היגיון קליני לפי המקרה הספציפי]
+• [תרופה/משפחה] ⚠️לאימות — [מנגנון, יעילות, שיקולי בטיחות, ניטור]
+PRN: [אם רלוונטי]
 
-═══════════════════════════════
-🎯 מטרות טיפול
-═══════════════════════════════
-טווח קצר (אשפוז / שבועות):
-טווח בינוני (חודשים):
-טווח ארוך (שנה+):
+🤝 ציר סוציאלי
+[הערכת המצב הסוציאלי]
+• ביטוח לאומי / זכויות: [ספציפי]
+• סל שיקום: [אפשרויות — דיור, תעסוקה, לימודים, מועדון]
+• מעורבות משפחתית: [כיצד]
+• המשך טיפול: [מרפאה, מסגרת, עמותות]
 
-═══════════════════════════════
-💊 ציר א' - תרופתי
-═══════════════════════════════
-היגיון תרופתי:
+💬 ציר שיחתי/פסיכותרפויטי
+• גישה מומלצת: [CBT/DBT/פסיכודינמי/EMDR/Schema/IPT/MBCT] — [למה מתאים כאן]
+• פוקוס: [מה לעבד]
+• תדירות ומשך: [מסגרת ריאלית]
+• שיקולים: [אליאנס, טראומה, מוטיבציה]
 
-המלצות:
-1. [תרופה / משפחה] ⚠️לאימות
-   - מנגנון ויעילות במקרה זה:
-   - שיקולי בטיחות (אינטראקציות, רקע גופני):
-   - ניטור (בדיקות, תדירות):
-   - תופעות לוואי לעקוב:
+🌱 רעיון יצירתי
+[גישה לא שגרתית אבל מבוססת ראיות]
 
-PRN / SOS:
-מה להפסיק / לשנות:
-
-═══════════════════════════════
-🤝 ציר ב' - סוציאלי
-═══════════════════════════════
-מעמד וזכויות:
-- ביטוח לאומי / ועדה:
-- סל שיקום (חשיבה רחבה - דיור? תעסוקה? לימודים?):
-
-מערכת תמיכה:
-- מעורבות משפחתית:
-- ייעוץ זוגי / משפחתי:
-
-תעסוקה / לימודים:
-דיור:
-
-קהילה והמשך טיפול:
-- מרפאה / מסגרת:
-- מועדונים, עמותות (Enosh, ITACH):
-- קבוצות תמיכה:
-
-═══════════════════════════════
-💬 ציר ג' - שיחתי / פסיכותרפויטי
-═══════════════════════════════
-גישות מומלצות (מנומק):
-1. [CBT / DBT / פסיכודינמית / EMDR / IPT / Schema / MBCT וכו']
-   - למה מתאימה כאן:
-   - פוקוס:
-   - תדירות:
-   - משך טיפול:
-
-נושאים מרכזיים:
-שיקולים מיוחדים:
-- אליאנס:
-- טראומה:
-- מוטיבציה:
-
-═══════════════════════════════
-🛡️ מניעת רלפסים וניהול סיכון
-═══════════════════════════════
-- סימני אזהרה אישיים:
-- תוכנית פעולה במשבר:
-- אנשי קשר:
-- אמצעי בטיחות:
-
-═══════════════════════════════
-🌱 חשיבה מורחבת ויצירתית
-═══════════════════════════════
-[1-3 רעיונות "מחוץ לקופסה" אבל מבוססים]
-
-═══════════════════════════════
-📌 לבירור לפני סופיות התוכנית
-═══════════════════════════════`
-  },
-
-  midIntake: {
-    label: 'שאלות באמצע קבלה',
-    short: 'שאלות',
-    icon: '❓',
-    description: 'מה עוד לשאול / לברר',
-    placeholder: 'הזן או הקלט את מה שכבר ברר עד עכשיו.',
-    maxTokens: 1500,
-    useQuestionsDefault: false,
-    systemPrompt: `אתה פסיכיאטר בכיר מנחה. הפסיכיאטר התורן באמצע קבלה ומשתף מה ברר עד עכשיו. תן לו רשימה ממוקדת של שאלות שעוד צריך לשאול.
-
-⚠️ אסור פרטים מזהים בפלט.
-
-🔴 דחוף - לפני המשך הקבלה
-- שאלה: ___
-  למה: [משפט קצר]
-
-🟡 חשוב - להשלמת התמונה הקלינית
-- שאלה: ___
-  למה: [משפט קצר]
-
-🟢 השלמה - לאינטייק מלא
-- שאלה: ___
-  למה: [משפט קצר]
-
-הוראות:
-- שאלות ספציפיות, ניתנות לתשאול ישיר
-- אל תחזור על מידע שכבר נמסר
-- 5-10 שאלות בכל קטגוריה לכל היותר`
-  }
-};
-
-const CLARIFYING_PROMPT = (modeLabel) => `אתה פסיכיאטר בכיר מנחה. הפסיכיאטר המתמחה הביא לך מידע גולמי ורוצה לכתוב ${modeLabel}. לפני הכתיבה, זהה 3-7 שאלות הבהרה קריטיות.
-
-⚠️ אסור: שאלות שהתשובה כבר בקלט.
-✅ כן: שאלות ספציפיות, פרגמטיות.
-
-פורמט פלט - בדיוק כך, ללא טקסט נוסף:
-
-1. [שאלה ברורה וקצרה] | [למה זה חשוב במשפט קצר]
-2. [שאלה] | [למה]
-3. [שאלה] | [למה]
-
-מקסימום 7 שאלות.`;
+📌 לבירור לפני סופיות התוכנית:`;
 
 const PRIVACY_PATTERNS = [
-  { pattern: /\b\d{9}\b/g, replacement: '[ת.ז.]', label: 'ת.ז.' },
-  { pattern: /\b0\d{1,2}-?\d{7}\b/g, replacement: '[טלפון]', label: 'טלפון' },
-  { pattern: /\+972-?\d{1,2}-?\d{7}\b/g, replacement: '[טלפון]', label: 'טלפון' },
-  { pattern: /\b\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\b/g, replacement: '[תאריך]', label: 'תאריך' },
+{ pattern: /\b\d{9}\b/g, replacement: ‘[ת.ז.]’ },
+{ pattern: /\b0\d{1,2}-?\d{7}\b/g, replacement: ‘[טלפון]’ },
+{ pattern: /+972-?\d{1,2}-?\d{7}\b/g, replacement: ‘[טלפון]’ },
+{ pattern: /\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g, replacement: ‘[תאריך]’ },
 ];
 
 function deidentify(text) {
-  let cleaned = text;
-  const found = [];
-  PRIVACY_PATTERNS.forEach(({ pattern, replacement, label }) => {
-    if (pattern.test(cleaned)) found.push(label);
-    cleaned = cleaned.replace(pattern, replacement);
-  });
-  return { cleaned, found: [...new Set(found)] };
+let out = text;
+PRIVACY_PATTERNS.forEach(({ pattern, replacement }) => { out = out.replace(pattern, replacement); });
+return out;
 }
 
-function parseQuestions(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const questions = [];
-  for (const line of lines) {
-    const match = line.match(/^\d+\.\s*(.+?)\s*\|\s*(.+)$/);
-    if (match) {
-      questions.push({
-        id: `q_${questions.length}`,
-        question: match[1].trim(),
-        why: match[2].trim(),
-        answer: ''
-      });
-    }
-  }
-  return questions;
+async function callClaude(system, user, maxTokens = 2500) {
+const res = await fetch(’/api/claude’, {
+method: ‘POST’,
+headers: { ‘Content-Type’: ‘application/json’ },
+body: JSON.stringify({
+model: ‘claude-opus-4-5’,
+max_tokens: maxTokens,
+system,
+messages: [{ role: ‘user’, content: user }]
+})
+});
+if (!res.ok) throw new Error(‘API ’ + res.status);
+const data = await res.json();
+if (data.error) throw new Error(data.error.message);
+return data.content.filter(b => b.type === ‘text’).map(b => b.text).join(’\n’);
 }
+
+const TABS = {
+intake:    { label: ‘קבלת מיון’, icon: ‘📋’ },
+monologue: { label: ‘הצגה לבכיר’, icon: ‘🎤’ },
+treatment: { label: ‘תוכנית טיפול’, icon: ‘🌿’ },
+};
+
 export default function App() {
-  const [mode, setMode] = useState('intake');
-  const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
-  const [privacyAlert, setPrivacyAlert] = useState([]);
-  const [stage, setStage] = useState('input');
-  const [questions, setQuestions] = useState([]);
-  const [useQuestions, setUseQuestions] = useState(MODES.intake.useQuestionsDefault);
-  const [loading, setLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [interimText, setInterimText] = useState('');
-  const [speechSupported, setSpeechSupported] = useState(true);
-  const [micPermission, setMicPermission] = useState('unknown');
-  const [showPermissionHelp, setShowPermissionHelp] = useState(false);
-  const recognitionRef = useRef(null);
-  const shouldKeepRecording = useRef(false);
-  const outputRef = useRef(null);
-  const questionsRef = useRef(null);
-  const currentMode = MODES[mode];
+const [stage, setStage] = useState(‘input’);
+const [input, setInput] = useState(’’);
+const [interim, setInterim] = useState(’’);
+const [isRec, setIsRec] = useState(false);
+const [micPerm, setMicPerm] = useState(‘unknown’);
 
-  useEffect(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) setSpeechSupported(false);
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: 'microphone' })
-        .then(result => {
-          setMicPermission(result.state);
-          result.onchange = () => setMicPermission(result.state);
-        })
-        .catch(() => setMicPermission('unknown'));
-    }
-  }, []);
+const [questions, setQuestions] = useState([]);
+const [answers, setAnswers] = useState({});
 
-  useEffect(() => {
-    setUseQuestions(currentMode.useQuestionsDefault);
-  }, [mode]);
+const [results, setResults] = useState({ intake: ‘’, monologue: ‘’, treatment: ‘’ });
+const [loading, setLoading] = useState({ intake: false, monologue: false, treatment: false });
+const [done, setDone] = useState({ intake: false, monologue: false, treatment: false });
+const [activeTab, setActiveTab] = useState(‘intake’);
+const [copied, setCopied] = useState(’’);
+const [error, setError] = useState(null);
 
-  const requestMicPermission = async () => {
-    setError(null);
-    setShowPermissionHelp(false);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      setMicPermission('granted');
-      startRecording();
-    } catch (err) {
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setMicPermission('denied');
-        setShowPermissionHelp(true);
-      } else if (err.name === 'NotFoundError') {
-        setError('לא נמצא מיקרופון במכשיר.');
-      } else {
-        setError('שגיאה בגישה למיקרופון: ' + (err.message || err.name));
-      }
-    }
-  };
+const recRef = useRef(null);
+const keepRec = useRef(false);
+const topRef = useRef(null);
 
-  const startRecording = () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setError('הדפדפן שלך לא תומך בהקלטה.'); return; }
-    try {
-      const recognition = new SR();
-      recognition.lang = 'he-IL';
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.onstart = () => { setIsRecording(true); setError(null); };
-      recognition.onresult = (event) => {
-        let interim = '';
-        let finalChunk = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) finalChunk += transcript + ' ';
-          else interim += transcript;
-        }
-        setInterimText(interim);
-        if (finalChunk) {
-          setInput(prev => {
-            const sep = prev && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : '';
-            return prev + sep + finalChunk;
-          });
-        }
-      };
-      recognition.onerror = (event) => {
-        if (event.error === 'no-speech' || event.error === 'aborted') return;
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          setMicPermission('denied');
-          setShowPermissionHelp(true);
-          shouldKeepRecording.current = false;
-          setIsRecording(false);
-        } else if (event.error === 'network') {
-          setError('בעיית רשת.');
-          shouldKeepRecording.current = false;
-          setIsRecording(false);
-        }
-      };
-      recognition.onend = () => {
-        if (shouldKeepRecording.current) {
-          try { recognition.start(); } catch (e) {
-            shouldKeepRecording.current = false;
-            setIsRecording(false);
-          }
-        } else {
-          setIsRecording(false);
-          setInterimText('');
-        }
-      };
-      recognitionRef.current = recognition;
-      shouldKeepRecording.current = true;
-      setIsRecording(true);
-      recognition.start();
-    } catch (e) {
-      setError('לא הצליח להתחיל הקלטה.');
-      setIsRecording(false);
-      shouldKeepRecording.current = false;
-    }
-  };
+useEffect(() => {
+navigator.permissions?.query({ name: ‘microphone’ })
+.then(r => { setMicPerm(r.state); r.onchange = () => setMicPerm(r.state); })
+.catch(() => {});
+}, []);
 
-  const stopRecording = () => {
-    shouldKeepRecording.current = false;
-    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch (e) {} }
-    setIsRecording(false);
-    setInterimText('');
-  };
+const startRec = () => {
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) { setError(‘השתמש ב-🎤 במקלדת iOS’); return; }
+try {
+const r = new SR();
+r.lang = ‘he-IL’; r.continuous = true; r.interimResults = true;
+r.onstart = () => { setIsRec(true); setError(null); };
+r.onresult = e => {
+let fin = ‘’, tmp = ‘’;
+for (let i = e.resultIndex; i < e.results.length; i++) {
+const t = e.results[i][0].transcript;
+if (e.results[i].isFinal) fin += t + ’ ‘; else tmp += t;
+}
+setInterim(tmp);
+if (fin) setInput(p => p + (p && !p.endsWith(’ ‘) ? ’ ’ : ‘’) + fin);
+};
+r.onerror = e => {
+if (e.error === ‘no-speech’ || e.error === ‘aborted’) return;
+if (e.error === ‘not-allowed’) { setMicPerm(‘denied’); keepRec.current = false; setIsRec(false); }
+};
+r.onend = () => {
+if (keepRec.current) { try { r.start(); } catch { setIsRec(false); } }
+else { setIsRec(false); setInterim(’’); }
+};
+recRef.current = r; keepRec.current = true; setIsRec(true); r.start();
+} catch { setError(‘לא הצליח להתחיל הקלטה.’); setIsRec(false); }
+};
 
-  const toggleRecording = () => {
-    if (isRecording) stopRecording();
-    else if (micPermission === 'denied') setShowPermissionHelp(true);
-    else if (micPermission === 'granted') startRecording();
-    else requestMicPermission();
-  };
+const stopRec = () => {
+keepRec.current = false;
+try { recRef.current?.stop(); } catch {}
+setIsRec(false); setInterim(’’);
+};
 
-  const callClaude = async (systemPrompt, userInput, maxTokens) => {
-    const response = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: maxTokens,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userInput }]
-      })
-    });
-    if (!response.ok) throw new Error('API error');
-    const data = await response.json();
-    return data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
-  };
+const toggleRec = async () => {
+if (isRec) { stopRec(); return; }
+if (micPerm === ‘granted’) { startRec(); return; }
+try {
+const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+s.getTracks().forEach(t => t.stop());
+setMicPerm(‘granted’); startRec();
+} catch { setMicPerm(‘denied’); setError(‘אשר גישה למיקרופון בהגדרות → Claude → מיקרופון’); }
+};
 
-  const handleStart = async () => {
-    if (!input.trim() || loading) return;
-    if (isRecording) stopRecording();
-    setError(null); setOutput(''); setCopied(false); setQuestions([]);
-    const { cleaned, found } = deidentify(input);
-    setPrivacyAlert(found);
-    if (!useQuestions) return generateFinal(cleaned);
-    setStage('asking');
-    setLoading(true);
-    try {
-      const text = await callClaude(CLARIFYING_PROMPT(currentMode.label), cleaned, 1200);
-      const parsed = parseQuestions(text);
-      if (parsed.length === 0) return generateFinal(cleaned);
-      setQuestions(parsed);
-      setStage('answering');
-      setTimeout(() => questionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-    } catch (e) {
-      setError('שגיאה ביצירת שאלות. נסה שוב.');
-      setStage('input');
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleGetQuestions = async () => {
+if (!input.trim()) return;
+if (isRec) stopRec();
+setError(null); setStage(‘clarifying’);
+try {
+const raw = await callClaude(CLARIFYING_QUESTIONS_PROMPT, `תיאור המקרה:\n${deidentify(input.trim())}`, 1500);
+const m = raw.match(/{[\s\S]*}/);
+if (!m) throw new Error(‘bad JSON’);
+const parsed = JSON.parse(m[0]);
+const qs = parsed.questions || [];
+setQuestions(qs);
+const init = {};
+qs.forEach(q => { init[q.id] = ‘’; });
+setAnswers(init);
+setStage(‘answering’);
+} catch {
+setError(‘שגיאה ביצירת שאלות. נסה שוב.’);
+setStage(‘input’);
+}
+};
 
-  const generateFinal = async (sourceInput, qs = null) => {
-    setStage('generating'); setLoading(true); setError(null);
-    let finalInput = typeof sourceInput === 'string' ? sourceInput : deidentify(input).cleaned;
-    if (qs && qs.length > 0) {
-      const answered = qs.filter(q => q.answer.trim());
-      if (answered.length > 0) {
-        const qaText = answered.map(q => `שאלה: ${q.question}\nתשובה: ${q.answer.trim()}`).join('\n\n');
-        finalInput += '\n\n--- מידע נוסף שנאסף בשאלות ---\n' + qaText;
-      }
-    }
-    try {
-      const text = await callClaude(currentMode.systemPrompt, finalInput, currentMode.maxTokens);
-      setOutput(text); setStage('done');
-      setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-    } catch (e) {
-      setError('שגיאה ביצירת הפלט. נסה שוב.');
-      setStage('input');
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleGenerate = async () => {
+setStage(‘generating’);
+setResults({ intake: ‘’, monologue: ‘’, treatment: ‘’ });
+setDone({ intake: false, monologue: false, treatment: false });
+setLoading({ intake: true, monologue: true, treatment: true });
+setActiveTab(‘intake’);
 
-  const handleSubmitAnswers = () => generateFinal(deidentify(input).cleaned, questions);
-  const handleSkipQuestions = () => generateFinal(deidentify(input).cleaned);
+```
+const cleaned = deidentify(input.trim());
+const qaText = questions.filter(q => answers[q.id]?.trim())
+  .map(q => `שאלה: ${q.text}\nתשובה: ${answers[q.id]}`).join('\n\n');
+const full = cleaned + (qaText ? `\n\n--- פרטים נוספים ---\n${qaText}` : '');
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(output);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (e) { setError('לא הצליח להעתיק.'); }
-  };
+const run = async (key, prompt, max) => {
+  try {
+    const text = await callClaude(prompt, full, max);
+    setResults(p => ({ ...p, [key]: text }));
+  } catch (e) {
+    setResults(p => ({ ...p, [key]: `שגיאה: ${e.message}` }));
+  } finally {
+    setDone(p => ({ ...p, [key]: true }));
+    setLoading(p => ({ ...p, [key]: false }));
+  }
+};
 
-  const handleClear = () => {
-    if (isRecording) stopRecording();
-    setInput(''); setOutput(''); setError(null);
-    setPrivacyAlert([]); setQuestions([]); setStage('input');
-  };
+Promise.all([
+  run('intake', INTAKE_PROMPT, 2500),
+  run('monologue', MONOLOGUE_PROMPT, 800),
+  run('treatment', TREATMENT_PROMPT, 3000),
+]).then(() => setStage('done'));
+```
 
-  const handleStartOver = () => {
-    setStage('input'); setOutput(''); setQuestions([]); setError(null);
-  };
+};
 
-  const updateAnswer = (id, value) => {
-    setQuestions(qs => qs.map(q => q.id === id ? { ...q, answer: value } : q));
-  };
-  return (
-    <div dir="rtl" className="min-h-screen bg-stone-50" style={{ fontFamily: "'Heebo', system-ui, sans-serif" }}>
-      <style>{FONT_STYLES}</style>
+const handleCopy = async key => {
+try { await navigator.clipboard.writeText(results[key]); setCopied(key); setTimeout(() => setCopied(’’), 2500); }
+catch { setError(‘לא הצליח להעתיק’); }
+};
 
-      <header className="bg-white border-b border-stone-200">
-        <div className="max-w-3xl mx-auto px-4 pt-6 pb-4">
-          <div className="flex items-baseline gap-2 mb-1">
-            <h1 className="text-3xl text-stone-900 font-bold tracking-tight" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>
-              עוזר תורן
-            </h1>
-            <span className="text-stone-400 text-sm">·</span>
-            <span className="text-stone-500 text-sm">פסיכיאטריה</span>
+const reset = () => {
+setStage(‘input’); setInput(’’); setInterim(’’);
+setQuestions([]); setAnswers({});
+setResults({ intake: ‘’, monologue: ‘’, treatment: ‘’ });
+setDone({ intake: false, monologue: false, treatment: false });
+setError(null);
+topRef.current?.scrollIntoView({ behavior: ‘smooth’ });
+};
+
+const allDone = done.intake && done.monologue && done.treatment;
+
+return (
+<div dir=“rtl” style={{ fontFamily: “‘Heebo’, system-ui, sans-serif”, minHeight: ‘100vh’, background: ‘#F7F6F3’ }}>
+<style>{`@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap'); *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0} .out{white-space:pre-wrap;line-height:1.9;font-size:15px;color:#2C2C2C} .spin{animation:spin 1s linear infinite;display:inline-block} @keyframes spin{to{transform:rotate(360deg)}} .fade{animation:fu .4s ease} @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}} .dot{animation:dot 1.8s ease-in-out infinite} @keyframes dot{0%,100%{opacity:.3;transform:scale(.85)}50%{opacity:1;transform:scale(1.05)}} .recpulse{animation:rp 1.6s ease-in-out infinite} @keyframes rp{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 14px rgba(220,38,38,0)}} textarea:focus,button:focus{outline:none}button{cursor:pointer}`}</style>
+
+```
+  <div ref={topRef} style={{ background: '#1C2B22', color: 'white', padding: '20px 20px 16px' }}>
+    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <h1 style={{ margin: 0, fontSize: 28, fontFamily: "'Frank Ruhl Libre',serif", fontWeight: 900, letterSpacing: '-0.5px' }}>עוזר תורן</h1>
+      <p style={{ margin: '4px 0 0', opacity: .6, fontSize: 13 }}>תאר מקרה ← שאלות הבהרה ← קבלה + הצגה + תוכנית</p>
+    </div>
+  </div>
+
+  <div style={{ background: '#FEF3C7', borderBottom: '1px solid #FDE68A', padding: '8px 20px' }}>
+    <div style={{ maxWidth: 680, margin: '0 auto', fontSize: 12, color: '#92400E' }}>
+      ⚠️ <strong>אין להזין שמות, ת.ז., תאריכי לידה או כתובות.</strong>
+    </div>
+  </div>
+
+  <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 60px' }}>
+
+    {/* INPUT */}
+    {stage === 'input' && (
+      <div className="fade">
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid #E5E2DB', overflow: 'hidden', marginBottom: 10 }}>
+          <textarea
+            value={input + (interim ? ' ' + interim : '')}
+            onChange={e => { if (!isRec) setInput(e.target.value); }}
+            placeholder="תאר את המקרה — מי הגיע, למה, מה קרה, מצבו, תרופות, רקע. ככל שיותר מידע — הפלט יהיה טוב יותר."
+            disabled={isRec}
+            rows={9}
+            style={{ width: '100%', padding: 16, fontSize: 16, border: 'none', resize: 'none', background: 'transparent', color: '#1C1C1C', lineHeight: 1.7 }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid #F0EDE8', background: '#FAFAF8' }}>
+            <span style={{ fontSize: 12, color: '#AAA' }}>{input.length} תווים</span>
+            {input && <button onClick={() => setInput('')} style={{ fontSize: 12, color: '#999', border: 'none', background: 'none', padding: '4px 8px' }}>ניקוי</button>}
           </div>
-          <p className="text-stone-500 text-sm">כלי עזר לקבלות, אינטייקים והצגות.</p>
         </div>
-      </header>
 
-      <div className="bg-amber-50 border-b border-amber-200">
-        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-start gap-2">
-          <span className="text-amber-700 mt-0.5">⚠️</span>
-          <p className="text-amber-900 text-xs leading-relaxed">
-            <strong>הקפד:</strong> אין להזין שמות, ת.ז., תאריכי לידה, כתובות, או שמות בני משפחה.
-          </p>
+        <button onClick={toggleRec} className={isRec ? 'recpulse' : ''}
+          style={{ width: '100%', padding: 16, borderRadius: 16, border: isRec ? 'none' : '2px solid #D4CFC8', background: isRec ? '#DC2626' : 'white', color: isRec ? 'white' : '#1C1C1C', fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
+          <span style={{ fontSize: 20 }}>{isRec ? '⏹' : '🎙️'}</span>
+          {isRec ? 'עצור הקלטה' : 'הקלט הסבר על המקרה'}
+        </button>
+
+        <div style={{ background: '#EFF6FF', borderRadius: 14, padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>⌨️</span>
+          <span style={{ fontSize: 13, color: '#1E40AF', lineHeight: 1.5 }}><strong>iPhone:</strong> לחץ על תיבת הטקסט ← לחץ 🎤 ליד מקש הרווח ← דבר.</span>
         </div>
+
+        {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 12, padding: '12px 16px', fontSize: 14, color: '#B91C1C', marginBottom: 12 }}>{error}</div>}
+
+        <button onClick={handleGetQuestions} disabled={!input.trim() || isRec}
+          style={{ width: '100%', padding: 18, borderRadius: 18, border: 'none', background: !input.trim() || isRec ? '#C4C0BB' : 'linear-gradient(135deg,#2D5645,#1A3828)', color: 'white', fontSize: 17, fontWeight: 700 }}>
+          המשך לשאלות הבהרה ←
+        </button>
       </div>
+    )}
 
-      <main className="max-w-3xl mx-auto px-4 py-5">
-        <div className="mb-5">
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-            {Object.entries(MODES).map(([key, m]) => (
-              <button
-                key={key}
-                onClick={() => { setMode(key); handleStartOver(); }}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                  mode === key ? 'bg-stone-900 text-white shadow-sm' : 'bg-white text-stone-700 border border-stone-200'
-                }`}
-              >
-                <span className="ml-1.5">{m.icon}</span>
-                {m.label}
-              </button>
+    {/* CLARIFYING LOADING */}
+    {stage === 'clarifying' && (
+      <div className="fade" style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+          {[0,1,2].map(i => <div key={i} className="dot" style={{ width: 10, height: 10, borderRadius: '50%', background: '#2D5645', animationDelay: `${i*0.2}s` }} />)}
+        </div>
+        <p style={{ color: '#555', fontSize: 16 }}>מנתח את המקרה ומכין שאלות...</p>
+      </div>
+    )}
+
+    {/* ANSWERING */}
+    {stage === 'answering' && (
+      <div className="fade">
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid #E5E2DB', padding: 20, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <span style={{ fontSize: 22 }}>💭</span>
+            <h2 style={{ margin: 0, fontSize: 20, fontFamily: "'Frank Ruhl Libre',serif", fontWeight: 700 }}>שאלות הבהרה</h2>
+          </div>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#888' }}>ענה על מה שאפשר — ניתן לדלג.</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {questions.map((q, idx) => (
+              <div key={q.id} style={{ borderBottom: idx < questions.length - 1 ? '1px solid #F0EDE8' : 'none', paddingBottom: 20 }}>
+                <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                  <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: '50%', background: '#1C2B22', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{idx + 1}</span>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600, lineHeight: 1.5 }}>{q.text}</p>
+                </div>
+
+                <div style={{ paddingRight: 34 }}>
+                  {q.type === 'mcq' && q.options && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+                      {q.options.map((opt, oi) => {
+                        const sel = answers[q.id] === opt;
+                        return (
+                          <button key={oi} onClick={() => setAnswers(p => ({ ...p, [q.id]: sel ? '' : opt }))}
+                            style={{ padding: '10px 14px', borderRadius: 12, textAlign: 'right', fontSize: 14, border: sel ? '2px solid #2D5645' : '1px solid #E5E2DB', background: sel ? '#EDF7F1' : 'white', color: sel ? '#1C3D2B' : '#444', fontWeight: sel ? 600 : 400 }}>
+                            {sel ? '✓ ' : ''}{opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <textarea
+                    value={q.type === 'open' ? (answers[q.id] || '') : (q.options?.includes(answers[q.id]) ? '' : (answers[q.id] || ''))}
+                    onChange={e => setAnswers(p => ({ ...p, [q.id]: q.type === 'mcq' && p[q.id] && q.options?.includes(p[q.id]) ? (e.target.value || p[q.id]) : e.target.value }))}
+                    placeholder={q.type === 'mcq' ? 'הערה נוספת (אופציונלי)...' : 'תשובה חופשית...'}
+                    rows={q.type === 'open' ? 2 : 1}
+                    style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #E5E2DB', fontSize: 13, color: '#555', resize: 'none', width: '100%' }}
+                  />
+                </div>
+              </div>
             ))}
           </div>
-          <p className="text-stone-500 text-xs mt-3 px-1">{currentMode.description}</p>
         </div>
 
-        {(stage === 'input' || stage === 'asking') && (
-          <>
-            <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-              <textarea
-                value={input + (interimText ? ' ' + interimText : '')}
-                onChange={(e) => { if (!isRecording) setInput(e.target.value); }}
-                placeholder={currentMode.placeholder}
-                className="w-full px-4 py-4 text-stone-900 text-base resize-none focus:outline-none placeholder:text-stone-400"
-                rows={8}
-                style={{ minHeight: '180px' }}
-                disabled={isRecording}
-              />
-              <div className="flex items-center justify-between px-3 py-2 border-t border-stone-100 bg-stone-50">
-                <span className="text-stone-400 text-xs">{input.length} תווים</span>
-                <button type="button" onClick={handleClear} disabled={!input && !output && !isRecording}
-                  className="text-stone-500 text-xs hover:text-stone-700 disabled:opacity-30">
-                  ניקוי
-                </button>
-              </div>
-            </div>
+        <button onClick={handleGenerate}
+          style={{ width: '100%', padding: 18, borderRadius: 18, border: 'none', background: 'linear-gradient(135deg,#2D5645,#1A3828)', color: 'white', fontSize: 17, fontWeight: 700, marginBottom: 8 }}>
+          צור קבלה + הצגה + תוכנית ←
+        </button>
+        <button onClick={handleGenerate}
+          style={{ width: '100%', padding: 12, borderRadius: 14, border: '1px solid #D4CFC8', background: 'white', color: '#666', fontSize: 14, marginBottom: 6 }}>
+          דלג על השאלות וצור ישירות
+        </button>
+        <button onClick={() => setStage('input')}
+          style={{ width: '100%', padding: 10, border: 'none', background: 'none', color: '#999', fontSize: 13 }}>
+          ↺ חזור לעריכת הקלט
+        </button>
+      </div>
+    )}
 
-            {speechSupported && (
-              <button type="button" onClick={toggleRecording} disabled={loading}
-                className={`w-full mt-3 py-4 rounded-2xl font-semibold text-base transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 ${
-                  isRecording ? 'bg-red-600 text-white recording-pulse shadow-md'
-                  : micPermission === 'denied' ? 'bg-white border-2 border-amber-400 text-amber-900'
-                  : 'bg-white border-2 border-stone-300 text-stone-900'
-                }`}
-                style={{ minHeight: '56px' }}>
-                {isRecording ? (<><span>⏹</span><span>עצור הקלטה</span></>)
-                  : micPermission === 'denied' ? (<><span>🎙️</span><span>המיקרופון חסום - לחץ לעזרה</span></>)
-                  : (<><span>🎙️</span><span>הקלט הסבר על המטופל</span></>)}
-              </button>
-            )}
+    {/* GENERATING / DONE */}
+    {(stage === 'generating' || stage === 'done') && (
+      <div className="fade">
+        {!allDone && (
+          <div style={{ background: '#1C2B22', borderRadius: 16, padding: '14px 18px', marginBottom: 14, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            {Object.entries(TABS).map(([key, { label }]) => (
+              <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: done[key] ? '#6EE7A0' : '#94A3B8', fontSize: 13 }}>
+                {loading[key] ? <span className="spin">⟳</span> : done[key] ? '✓' : '○'}
+                {label}
+              </span>
+            ))}
+            <span style={{ fontSize: 12, color: '#6B7280', marginRight: 'auto' }}>עובד ברקע...</span>
+          </div>
+        )}
 
-            <div className="mt-3 bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3 flex items-start gap-3">
-              <span className="text-2xl leading-none mt-0.5">⌨️</span>
-              <div>
-                <p className="text-blue-900 text-sm font-semibold mb-0.5">הכתבה דרך מקלדת iOS</p>
-                <p className="text-blue-800 text-xs leading-relaxed">
-                  לחץ על תיבת הטקסט ← לחץ על <strong>🎤</strong> ליד מקש הרווח ← דבר בעברית.
-                </p>
-              </div>
-            </div>
-
-            {showPermissionHelp && (
-              <div className="mt-3 bg-amber-50 border border-amber-300 rounded-2xl p-4 fade-in">
-                <p className="text-amber-900 font-semibold text-sm mb-1">🎙️ המיקרופון חסום</p>
-                <p className="text-amber-800 text-xs leading-relaxed mb-3">
-                  השתמש בהכתבה דרך המקלדת - זה עובד בדיוק אותו הדבר.
-                </p>
-                <button type="button" onClick={() => setShowPermissionHelp(false)}
-                  className="w-full py-2.5 rounded-xl bg-white border border-stone-300 text-stone-700 text-sm">
-                  הבנתי
-                </button>
-              </div>
-            )}
-
-            {mode !== 'midIntake' && (
-              <div className="mt-4 flex items-center justify-between bg-white border border-stone-200 rounded-xl px-4 py-3">
-                <div>
-                  <div className="text-stone-900 text-sm font-medium">שאלות הבהרה לפני הפלט</div>
-                  <div className="text-stone-500 text-xs mt-0.5">המערכת תשאל שאלות חיוניות ותשפר את הפלט</div>
-                </div>
-                <button onClick={() => setUseQuestions(!useQuestions)}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${useQuestions ? 'bg-emerald-700' : 'bg-stone-300'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${useQuestions ? 'right-0.5' : 'right-5'}`} />
-                </button>
-              </div>
-            )}
-
-            <button onClick={handleStart} disabled={!input.trim() || loading || isRecording}
-              className="w-full mt-4 py-4 rounded-2xl text-white font-semibold text-base disabled:opacity-40 shadow-sm"
-              style={{ background: loading || !input.trim() || isRecording ? '#A8A29E' : 'linear-gradient(135deg, #2D5645 0%, #1F3D31 100%)' }}>
-              {stage === 'asking' ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="flex gap-1">
-                    <span className="pulse-dot w-1.5 h-1.5 bg-white rounded-full"></span>
-                    <span className="pulse-dot w-1.5 h-1.5 bg-white rounded-full"></span>
-                    <span className="pulse-dot w-1.5 h-1.5 bg-white rounded-full"></span>
-                  </span>
-                  <span>מנתח ומכין שאלות...</span>
-                </span>
-              ) : (
-                <>{useQuestions && mode !== 'midIntake' ? `התחל - שאלות + ${currentMode.short}` : `צור ${currentMode.short}`}</>
-              )}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12, overflowX: 'auto', paddingBottom: 2 }}>
+          {Object.entries(TABS).map(([key, { label, icon }]) => (
+            <button key={key} onClick={() => setActiveTab(key)}
+              style={{ flexShrink: 0, padding: '10px 16px', borderRadius: 30, fontSize: 14, fontWeight: 500, border: activeTab === key ? 'none' : '1px solid #E5E2DB', background: activeTab === key ? '#1C2B22' : 'white', color: activeTab === key ? 'white' : '#555' }}>
+              {icon} {label} {loading[key] && <span className="spin" style={{ marginRight: 4 }}>⟳</span>}
             </button>
-          </>
-        )}
+          ))}
+        </div>
 
-        {stage === 'answering' && (
-          <div ref={questionsRef} className="fade-in">
-            <div className="bg-white rounded-2xl border border-stone-200 p-5">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">💭</span>
-                <h2 className="text-xl text-stone-900 font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>שאלות הבהרה</h2>
+        {Object.entries(TABS).map(([key, { label }]) => (
+          <div key={key} style={{ display: activeTab === key ? 'block' : 'none' }}>
+            {!done[key] ? (
+              <div style={{ background: 'white', borderRadius: 20, border: '1px solid #E5E2DB', padding: 40, textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
+                  {[0,1,2].map(i => <div key={i} className="dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#2D5645', animationDelay: `${i*0.2}s` }} />)}
+                </div>
+                <p style={{ color: '#888', fontSize: 15 }}>מייצר {label}...</p>
               </div>
-              <p className="text-stone-500 text-sm mb-5">ענה על מה שאתה יודע. אפשר לדלג.</p>
-              <div className="space-y-4">
-                {questions.map((q, idx) => (
-                  <div key={q.id} className="border-b border-stone-100 pb-4 last:border-0">
-                    <div className="flex gap-2 mb-1">
-                      <span className="flex-shrink-0 w-6 h-6 bg-stone-100 text-stone-700 rounded-full flex items-center justify-center text-xs font-semibold">{idx + 1}</span>
-                      <p className="text-stone-900 text-sm font-medium leading-relaxed">{q.question}</p>
-                    </div>
-                    <p className="text-stone-400 text-xs mr-8 mb-2">{q.why}</p>
-                    <div className="mr-8">
-                      <textarea value={q.answer} onChange={(e) => updateAnswer(q.id, e.target.value)}
-                        placeholder="התשובה / לא ידוע / לדלג..."
-                        className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none resize-none" rows={2} />
-                    </div>
-                  </div>
-                ))}
+            ) : (
+              <div className="fade">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '0 4px' }}>
+                  <h3 style={{ margin: 0, fontSize: 18, fontFamily: "'Frank Ruhl Libre',serif" }}>{label}</h3>
+                  <button onClick={() => handleCopy(key)}
+                    style={{ padding: '8px 16px', borderRadius: 30, fontSize: 13, fontWeight: 500, border: 'none', background: copied === key ? '#D1FAE5' : '#1C2B22', color: copied === key ? '#065F46' : 'white' }}>
+                    {copied === key ? '✓ הועתק' : '📋 העתק'}
+                  </button>
+                </div>
+                <div style={{ background: 'white', borderRadius: 20, border: '1px solid #E5E2DB', padding: '20px 22px', boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
+                  <p className="out">{results[key]}</p>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <button onClick={handleSkipQuestions} className="py-3 rounded-2xl bg-white border border-stone-300 text-stone-700 font-medium text-sm">דלג על שאלות</button>
-              <button onClick={handleSubmitAnswers} className="py-3 rounded-2xl text-white font-semibold text-sm shadow-sm"
-                style={{ background: 'linear-gradient(135deg, #2D5645 0%, #1F3D31 100%)' }}>צור גרסה סופית ←</button>
-            </div>
-            <button onClick={handleStartOver} className="w-full mt-2 py-2 text-stone-500 text-sm">↺ חזור לעריכת הקלט</button>
+            )}
           </div>
-        )}
+        ))}
 
-        {stage === 'generating' && (
-          <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center fade-in">
-            <div className="flex justify-center gap-1.5 mb-3">
-              <span className="pulse-dot w-2 h-2 bg-emerald-700 rounded-full"></span>
-              <span className="pulse-dot w-2 h-2 bg-emerald-700 rounded-full"></span>
-              <span className="pulse-dot w-2 h-2 bg-emerald-700 rounded-full"></span>
-            </div>
-            <p className="text-stone-700 font-medium">מייצר {currentMode.label}...</p>
-            <p className="text-stone-400 text-xs mt-1">זה לוקח כמה שניות</p>
-          </div>
-        )}
+        <div style={{ marginTop: 20 }}>
+          <p style={{ fontSize: 11, color: '#AAA', lineHeight: 1.6, margin: '0 0 12px' }}>
+            ⚠️ פלט AI — דורש קריאה ואימות לפני שימוש קליני. כל מינון/תרופה — לאמת מול מקור מוסמך.
+          </p>
+          {allDone && (
+            <button onClick={reset}
+              style={{ width: '100%', padding: 14, borderRadius: 16, border: '1px solid #D4CFC8', background: 'white', color: '#555', fontSize: 15, fontWeight: 500 }}>
+              ↺ מקרה חדש
+            </button>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+```
 
-        {privacyAlert.length > 0 && stage !== 'input' && (
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 fade-in">
-            <p className="text-blue-900 text-xs"><strong>זוהה והוסר:</strong> {privacyAlert.join(', ')}</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3 fade-in">
-            <p className="text-red-900 text-sm">{error}</p>
-          </div>
-        )}
-
-        {stage === 'done' && output && (
-          <div ref={outputRef} className="mt-6 fade-in">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <h2 className="text-xl text-stone-900 font-semibold" style={{ fontFamily: "'Frank Ruhl Libre', serif" }}>{currentMode.label}</h2>
-              <button onClick={handleCopy}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${copied ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-stone-900 text-white'}`}>
-                {copied ? '✓ הועתק' : '📋 העתק'}
-              </button>
-            </div>
-            <div className="bg-white rounded-2xl border border-stone-200 px-5 py-5 shadow-sm">
-              <div className="output-pre text-stone-800 text-[15px]">{output}</div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <button onClick={handleStartOver} className="py-3 rounded-2xl bg-white border border-stone-300 text-stone-700 font-medium text-sm">↺ חזור לעריכה</button>
-              <button onClick={() => generateFinal(deidentify(input).cleaned, questions.length ? questions : null)}
-                className="py-3 rounded-2xl bg-stone-100 text-stone-800 font-medium text-sm">⟳ צור שוב</button>
-            </div>
-            <div className="mt-4 text-stone-400 text-xs leading-relaxed px-1">
-              <p>⚠️ פלט AI - דורש קריאה ואימות לפני הכנסה לתיק.</p>
-              <p className="mt-1">⚠️ כל מינון/תרופה - יש לאמת מול מקור מוסמך.</p>
-            </div>
-          </div>
-        )}
-
-        <div className="h-12"></div>
-      </main>
-    </div>
-  );
+);
 }
