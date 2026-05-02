@@ -1,7 +1,7 @@
 'use client'
 
 
-import { useState, useRef, useEffect } from ‘react’;
+import { useState, useRef, useEffect } from 'react';
 
 const CLARIFYING_QUESTIONS_PROMPT = `אתה פסיכיאטר בכיר מנחה. קיבלת תיאור גולמי של מקרה פסיכיאטרי ממיון. צור 6-10 שאלות הבהרה קריטיות.
 
