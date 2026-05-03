@@ -17,51 +17,50 @@ const CLARIFYING_QUESTIONS_PROMPT = `אתה פסיכיאטר בכיר מנחה. 
 
 const INTAKE_PROMPT = `אתה עוזר קליני לפסיכיאטר מתמחה בתורנות מיון בישראל. כתוב קבלת מיון פסיכיאטרית בעברית רפואית תקנית, בסגנון של פסיכיאטר ישראלי מנוסה.
 
-חוקים מחייבים - חובה לקיים את כולם:
-- טקסט רץ בלבד. אסור לחלוטין: כוכביות, סולמיות, מקפים כרשימה, טבלאות, בולד, כותרות עם #, bullet points מכל סוג.
-- פסקאות רצופות בלבד, בדיוק כמו קבלה רפואית אמיתית.
-- פרטיות: אין שמות, ת.ז., תאריכי לידה מדויקים, כתובות. השתמש ב"המטופל", "בן זוגו", "אמו" וכו'.
+חוקים מחייבים:
+- טקסט רץ בלבד. אסור: כוכביות, מקפים כרשימה, טבלאות, בולד, bullet points.
+- פסקאות רצופות בלבד.
+- פרטיות: אין שמות, ת.ז., תאריכי לידה, כתובות. השתמש ב"המטופל", "אמו" וכו'.
 - גיל: תמיד מדויק - "בן 41", לא "כבן 41".
-- תרופות: שמות בעברית (לוסטרל, ציפרלקס, מירו, קלונקס וכו'). מינון + תדירות + משך. סיים ב"(לאימות)". לא להמציא מינונים.
-- ציטוטים מהמטופל: בגרש בודד - 'ככה הוא אמר'.
-- שלילות: "שולל אובדנות בעבר ובהווה" / "שולל וללא עדות לאפיזודה מאניפורמית".
-- מידע חסר: "לבירור". לא לכתוב "לא נמסר".
+- תרופות: שמות בעברית. מינון + תדירות + משך. סיים ב"(לאימות)".
+- ציטוטים: בגרש בודד.
 - אין MSE בכלל.
 
-פורמט מחייב - בדיוק בסדר הזה:
+חוק קריטי - מידע חסר:
+אסור להמציא מידע. אם מידע חסר, כתוב בדיוק: [[חסר:תיאור קצר של מה חסר]]
+דוגמאות: [[חסר:שלילת תסמיני מאניה]], [[חסר:משך הטיפול הנוכחי]], [[חסר:ניסיונות אובדניים בעבר]], [[חסר:רקע גופני]]
 
-פסקה 1 - פתיח:
-התקבל במסגרת תורנות מיון, הגיע [ללא הפנייה רשמית / עם הפנייה מ___], [בגפו / בליווי ___]. [מוכר / לא מוכר למוסדנו]. [אם מוכר: ידוע במעקב ד"ר ___ במרפאת ___ / מאושפז בעבר במחלקתנו].
+פורמט מחייב:
 
-פסקה 2 - דמוגרפיה:
-[גיל מדויק, מצב משפחתי - "בן 41, גרוש מזה כחצי שנה ואב ל-3 ילדים" / "בת 28, רווקה ללא ילדים"]. [מגורים]. [תעסוקה]. [ביטוח לאומי - מוכר/לא מוכר, קצבה, אחוזי נכות, סל שיקום אם יש].
+התקבל במסגרת תורנות מיון, הגיע [ללא הפנייה רשמית / עם הפנייה מ___], [בגפו / בליווי ___]. [מוכר / לא מוכר למוסדנו / מוכר למערכת הפסיכיאטרית, ידוע במעקב ד"ר ___ במרפאת ___].
 
-פסקה 3 - היסטוריה פסיכיאטרית:
-[משפט או שניים בלבד: מוכר/לא מוכר למערכת, כמה זמן, באיזה מסגרות - מרפאה/אשפוז/טיפול פרטי. הפירוט הכרונולוגי המלא יופיע בתולדות המחלה]. טיפול תרופתי נוכחי: [שם בעברית מינון תדירות מזה כמה זמן (לאימות)]. [אם אין: ללא טיפול תרופתי נוכחי].
+[פסקה: גיל ומצב משפחתי - "בן 41, גרוש מזה כחצי שנה ואב ל-3 ילדים". מגורים. תעסוקה. ביטוח לאומי.]
 
-# רקע גופני - [מחלות וטיפולים, או "לדבריו בריא בדרך כלל, שולל מחלות ברקע או שימוש בתרופות"].
+[משפט או שניים בלבד: מוכר/לא מוכר למערכת, כמה זמן, באיזה מסגרות. הפירוט הכרונולוגי יופיע בתולדות המחלה]. טיפול תרופתי נוכחי: [שם בעברית מינון תדירות מזה כמה זמן (לאימות)].
+
+# רקע גופני - [מחלות וטיפולים, או "לדבריו בריא בדרך כלל, שולל מחלות ברקע"].
 # פסיכופתולוגיה משפחתית - [או "שולל תחלואה נפשית ידועה במשפחה"].
 # שימוש בחומרים - [עבר והווה].
-[רגישויות תרופתיות אם יש - בשורה נפרדת].
 
-תלונה עיקרית - [שורה אחת בלבד: הסיבה שהמטופל הגיע].
+תלונה עיקרית - [שורה אחת בלבד].
 
-מחלה נוכחית - [בנה את הפסקה בסדר הבא:
+מחלה נוכחית - [בנה בסדר הזה:
 
-ראשית: סיפור המקרה - מה הוביל לפנייה עכשיו, הטריגר, השתלשלות האירועים האחרונים.
+1. סיפור המקרה - מה הוביל לפנייה עכשיו, הטריגר, השתלשלות האירועים האחרונים.
 
-שנית: תמונה דכאונית - תמיד לפרט את כל הקריטריונים: מצב רוח (ציון מספרי אם ניתן), שינה, תיאבון, אנרגיה, ריכוז, אנהדוניה, ערך עצמי, אשמה. ציטוטים בגרש בודד. שימוש בלשון "מתאר ש", "לדבריו", "מציין כי" לסירוגין.
+2. תמונה דכאונית - תמיד לפרט: מצב רוח (ציון מספרי אם ניתן), שינה, תיאבון, אנרגיה, ריכוז, אנהדוניה, ערך עצמי, אשמה. ציטוטים בגרש בודד. שימוש בלשון "מתאר ש", "לדבריו", "מציין כי" לסירוגין.
 
-שלישית: אם קיימת אבחנה נוספת רלוונטית - פרט אותה לפני השלילות. לגבי PTSD: פלשבקים, סיוטים, דריכות, הימנעויות - מה קיים ומה שולל. לגבי חרדה/פאניקה: תסמינים גופניים, הימנעויות - מה קיים ומה שולל. לגבי OCD: מחשבות טורדניות, קומפולסיות - מה קיים ומה שולל.
+3. אם קיימת אבחנה נוספת רלוונטית - פרט לפני השלילות. לגבי PTSD: פלשבקים, סיוטים, דריכות, הימנעויות. לגבי חרדה/פאניקה: תסמינים גופניים, הימנעויות. לגבי OCD: מחשבות טורדניות, קומפולסיות.
 
-רביעית: אובדנות - בעבר ובהווה, תכנית, אמצעי. ניסיונות קודמים: "בליעת X כדורי ___ , ללא אשפוז / אושפז ב___". פגיעה עצמית. מסוכנות לאחרים.
+4. אובדנות - בעבר ובהווה, תכנית, אמצעי. ניסיונות קודמים: "בליעת X כדורי ___, ללא אשפוז / אושפז ב___". פגיעה עצמית. מסוכנות לאחרים.
 
-חמישית: פסקת שלילות - פסקה אחת ששוללת את כל האבחנות שלא קיימות במקרה זה. למשל: "שולל וללא עדות לאפיזודה מאניפורמית בעבר ובהווה, שולל מחשבות שווא או הפרעות בפרצפציה, שולל תסמיני OCD, שולל הסתמנות המתאימה לפוסט טראומה." - רק את מה שלא פורט למעלה.]
-תולדות המחלה - [כרונולוגי מתחילת הקשיים הנפשיים, אפיזודות, אשפוזים, מה הביא לכל החמרה].
+5. פסקת שלילות - פסקה אחת ששוללת את כל האבחנות שלא קיימות: "שולל וללא עדות לאפיזודה מאניפורמית בעבר ובהווה, שולל מחשבות שווא או הפרעות בפרצפציה..." - רק מה שלא פורט למעלה.]
 
-תולדות חיים - [ילדות ומשפחת מוצא, השכלה, שירות צבאי, עבודה, זוגיות. לא לדלג על סעיפים - אם לא ידוע, פשוט לא לכלול. לא לכתוב "לא נמסר"].
+תולדות המחלה - [כרונולוגי מלא מתחילת הקשיים, כולל פירוט מסגרות הטיפול לאורך השנים].
 
-לסיכום, [משפט זיהוי: גיל, מצב משפחתי, אבחנות ידועות]. [מה הביא אותו עכשיו ורושם בבדיקה]. באבחנה מבדלת: ___, ___. [שלילות: "שולל וללא עדות ל___"]. סיכון מוערך כ___.
+תולדות חיים - [ילדות, השכלה, צבא, עבודה, זוגיות. לא לכתוב "לא נמסר"].
+
+לסיכום, [גיל, מצב משפחתי, אבחנות ידועות. מה הביא עכשיו ורושם בבדיקה]. באבחנה מבדלת: ___, ___. [שלילות]. סיכון מוערך כ___.
 
 בייעוץ עם כונן ד"ר ___ -
 א.
@@ -72,26 +71,26 @@ const INTAKE_PROMPT = `אתה עוזר קליני לפסיכיאטר מתמחה 
 
 const MONOLOGUE_PROMPT = `אתה עוזר לפסיכיאטר מתמחה בישראל. כתוב הצגה קצרה וחכמה לבכיר - 4-6 משפטים בלבד. פסקה אחת, ישירה, ללא כותרות.
 
-מבנה מחייב: משפט 1 - מי המטופל ורקע תמציתי קליני רלוונטי בלבד. משפט 2 - למה הגיע ומה קרה. משפט 3 - מה מתרשם קלינית היום וסיכון. משפט 4-5 - מה מתוכנן ומה ההתלבטות.
+מבנה: משפט 1 - מי המטופל ורקע קליני תמציתי. משפט 2 - למה הגיע ומה קרה. משפט 3 - מה מתרשם קלינית וסיכון. משפט 4-5 - מה מתוכנן ומה ההתלבטות.
 
-פרטיות: אין פרטים מזהים. טון: פורמלי, דבור, ישיר - כאילו עומד מול בכיר.
-התחל ב"הגיע מטופל..." וסיים ב"...ורציתי להתייעץ לגבי [ההתלבטות המרכזית]."`;
+פרטיות: אין פרטים מזהים. אם יש [[חסר:X]] בחומר - דלג עליו באלגנטיות.
+התחל ב"הגיע מטופל..." וסיים ב"...ורציתי להתייעץ לגבי [ההתלבטות]."`;
 
-const TREATMENT_PROMPT = `אתה פסיכיאטר בכיר מנוסה. כתוב תוכנית טיפול קצרה, קולעת וממוקדת בשלושה צירים. פרוזה בלבד - אין טבלאות, אין bullet points, אין כוכביות, אין סולמיות. כתוב בגוף שלישי כאילו מייעץ לעמית.
+const TREATMENT_PROMPT = `אתה פסיכיאטר בכיר מנוסה. כתוב תוכנית טיפול קצרה וקולעת בשלושה צירים. פרוזה בלבד - אין טבלאות, bullet points, כוכביות. אם יש [[חסר:X]] בחומר - התייחס למה שידוע ואל תמציא.
 
-פרטיות: אין פרטים מזהים. תרופות: שמות בעברית, סיים כל המלצה ב"(לאימות)".
+פרטיות: אין פרטים מזהים. תרופות: שמות בעברית, סיים ב"(לאימות)".
 
-כתוב בדיוק בפורמט הזה, פסקה לכל ציר:
+תרופתי - [פסקה קצרה וקולעת.]
 
-תרופתי - [פסקה קצרה וקולעת. לדוגמה: לשקול מיצוי הטיפול הנוכחי בלוסטרל ל-200 מ"ג (לאימות), או אוגמנטציה עם מירו שיסייע גם בשינה (לאימות). אם אין תגובה, לשקול מעבר ל___. לנטר ___ .]
+סוציאלי - [פסקה: זכויות ביטוח לאומי, סל שיקום, המשך טיפול, מעורבות משפחתית, עמותות כמו ענוש/אית"ך.]
 
-סוציאלי - [פסקה: זכויות ביטוח לאומי רלוונטיות למקרה זה, סל שיקום, מסגרת המשך טיפול, מעורבות משפחתית, עמותות רלוונטיות כמו ענוש, אית"ך.]
+שיחתי - [פסקה: גישה מומלצת ולמה, פוקוס, תדירות, שיקולים מיוחדים.]
 
-שיחתי - [פסקה: גישה מומלצת ולמה מתאימה למקרה הספציפי הזה - CBT, DBT, פסיכודינמי, EMDR, Schema, IPT, MBCT. פוקוס הטיפול. תדירות ומשך. שיקולים מיוחדים - אליאנס, טראומה, מוטיבציה.]
+לבירור - [משפט: מה חסר שיכול לשנות את הגישה.]`;
 
-לבירור - [משפט אחד: מה חסר שיכול לשנות את הגישה הטיפולית.]`;
+const REVISE_INTAKE_PROMPT = `אתה עוזר קליני לפסיכיאטר. קיבלת קבלת מיון עם חסרים שמולאו. כתוב מחדש את הקבלה תוך שילוב כל המידע החדש. שמור על הפורמט המקורי - טקסט רץ בלבד, ללא כוכביות/סולמיות/בולטים/טבלאות. אם נותרו [[חסר:X]] שלא מולאו - השאר אותם כפי שהם.`;
 
-const REVISE_INTAKE_PROMPT = `אתה עוזר קליני לפסיכיאטר. קיבלת קבלת מיון קיימת והערות תיקון מהמתמחה. כתוב מחדש את הקבלה תוך שילוב התיקונים, תוך שמירה מלאה על הפורמט המקורי - טקסט רץ בלבד, ללא כוכביות, סולמיות, בולטים, טבלאות. שמור על אותו מבנה פסקאות.`;
+const MISSING_OPTIONS_PROMPT = `אתה פסיכיאטר בכיר. מתמחה מבקש עזרה למלא שדה חסר בקבלת מיון. השדה: "{DESC}". צור 4-5 אפשרויות קצרות ורלוונטיות בעברית רפואית תקנית. החזר JSON בלבד: {"options": ["אפשרות 1", "אפשרות 2", "אפשרות 3", "אפשרות 4"]}`;
 const PRIVACY_PATTERNS = [
   { pattern: /\b\d{9}\b/g, replacement: '[ת.ז.]' },
   { pattern: /\b0\d{1,2}-?\d{7}\b/g, replacement: '[טלפון]' },
@@ -103,6 +102,23 @@ function deidentify(text) {
   let out = text;
   PRIVACY_PATTERNS.forEach(({ pattern, replacement }) => { out = out.replace(pattern, replacement); });
   return out;
+}
+
+function cleanMissing(text) {
+  return text.replace(/\[\[חסר:[^\]]*\]\]/g, 'לבירור');
+}
+
+function parseMissing(text) {
+  const parts = [];
+  const regex = /\[\[חסר:([^\]]*)\]\]/g;
+  let last = 0, match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push({ type: 'text', content: text.slice(last, match.index) });
+    parts.push({ type: 'missing', desc: match[1], full: match[0], index: match.index });
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push({ type: 'text', content: text.slice(last) });
+  return parts;
 }
 
 async function callClaude(system, user, maxTokens = 3000) {
@@ -122,33 +138,15 @@ async function callClaude(system, user, maxTokens = 3000) {
   return data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
 }
 
-const TABS = {
-  intake:    { label: 'קבלת מיון', icon: '📋' },
-  monologue: { label: 'הצגה לבכיר', icon: '🎤' },
-  treatment: { label: 'תוכנית טיפול', icon: '🌿' },
-};
+const TABS = { intake: { label: 'קבלת מיון', icon: '📋' }, monologue: { label: 'הצגה לבכיר', icon: '🎤' }, treatment: { label: 'תוכנית טיפול', icon: '🌿' } };
 
 const C = {
-  primary: '#9D174D',
-  dark: '#7A0F3D',
-  accent: '#EC4899',
-  bg: '#FDF2F8',
-  warn: '#FEF3C7',
-  warnBorder: '#FDE68A',
-  warnText: '#92400E',
-  info: '#FCE7F3',
-  infoText: '#9D174D',
-  border: '#F9A8D4',
-  borderSoft: '#FBCFE8',
-  text: '#1F1F1F',
-  mute: '#6B7280',
-  success: '#10B981',
-  successBg: '#D1FAE5',
-  successText: '#065F46',
-  danger: '#DC2626',
-  dangerBg: '#FEF2F2',
-  dangerBorder: '#FECACA',
-  dangerText: '#B91C1C',
+  primary: '#9D174D', dark: '#7A0F3D', accent: '#EC4899',
+  bg: '#FDF2F8', warn: '#FEF3C7', warnBorder: '#FDE68A', warnText: '#92400E',
+  info: '#FCE7F3', infoText: '#9D174D', border: '#F9A8D4', borderSoft: '#FBCFE8',
+  text: '#1F1F1F', mute: '#6B7280',
+  success: '#10B981', successBg: '#D1FAE5', successText: '#065F46',
+  danger: '#DC2626', dangerBg: '#FEF2F2', dangerBorder: '#FECACA', dangerText: '#B91C1C',
 };
 
 export default function App() {
@@ -157,10 +155,8 @@ export default function App() {
   const [interim, setInterim] = useState('');
   const [isRec, setIsRec] = useState(false);
   const [micPerm, setMicPerm] = useState('unknown');
-
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
-
   const [results, setResults] = useState({ intake: '', monologue: '', treatment: '' });
   const [loading, setLoading] = useState({ intake: false, monologue: false, treatment: false });
   const [done, setDone] = useState({ intake: false, monologue: false, treatment: false });
@@ -168,13 +164,19 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('intake');
   const [copied, setCopied] = useState('');
   const [globalError, setGlobalError] = useState(null);
-
   const [reviseNote, setReviseNote] = useState('');
   const [revising, setRevising] = useState(false);
-
   const [emailMode, setEmailMode] = useState(false);
   const [emailAddr, setEmailAddr] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
+
+  const [missingModal, setMissingModal] = useState(null);
+  const [missingOptions, setMissingOptions] = useState([]);
+  const [missingLoadingOpts, setMissingLoadingOpts] = useState(false);
+  const [missingSelected, setMissingSelected] = useState([]);
+  const [missingFreeText, setMissingFreeText] = useState('');
+  const [pendingFills, setPendingFills] = useState({});
+  const [updating, setUpdating] = useState(false);
 
   const recRef = useRef(null);
   const keepRec = useRef(false);
@@ -216,11 +218,7 @@ export default function App() {
     } catch { setGlobalError('לא הצליח להתחיל הקלטה.'); setIsRec(false); }
   };
 
-  const stopRec = () => {
-    keepRec.current = false;
-    try { recRef.current?.stop(); } catch {}
-    setIsRec(false); setInterim('');
-  };
+  const stopRec = () => { keepRec.current = false; try { recRef.current?.stop(); } catch {} setIsRec(false); setInterim(''); };
 
   const toggleRec = async () => {
     if (isRec) { stopRec(); return; }
@@ -246,13 +244,9 @@ export default function App() {
       setQuestions(qs);
       const init = {};
       qs.forEach(q => { init[q.id] = ''; });
-      setAnswers(init);
-      savedAnswers.current = init;
+      setAnswers(init); savedAnswers.current = init;
       setStage('answering');
-    } catch {
-      setGlobalError('שגיאה ביצירת שאלות. הקלט שלך נשמר.');
-      setStage('input');
-    }
+    } catch { setGlobalError('שגיאה ביצירת שאלות. הקלט שלך נשמר.'); setStage('input'); }
   };
 
   const buildFullInput = () => {
@@ -272,19 +266,17 @@ export default function App() {
     } catch (e) {
       setErrors(p => ({ ...p, [key]: e.message }));
       setDone(p => ({ ...p, [key]: true }));
-    } finally {
-      setLoading(p => ({ ...p, [key]: false }));
-    }
+    } finally { setLoading(p => ({ ...p, [key]: false })); }
   };
 
   const handleGenerate = async () => {
-    savedInput.current = input;
-    savedAnswers.current = answers;
+    savedInput.current = input; savedAnswers.current = answers;
     setStage('generating');
     setResults({ intake: '', monologue: '', treatment: '' });
     setDone({ intake: false, monologue: false, treatment: false });
     setErrors({ intake: '', monologue: '', treatment: '' });
     setLoading({ intake: true, monologue: true, treatment: true });
+    setPendingFills({});
     setActiveTab('intake');
     const full = buildFullInput();
     Promise.all([
@@ -299,9 +291,54 @@ export default function App() {
     const prompts = { intake: INTAKE_PROMPT, monologue: MONOLOGUE_PROMPT, treatment: TREATMENT_PROMPT };
     const maxes = { intake: 4000, monologue: 1000, treatment: 4000 };
     setDone(p => ({ ...p, [key]: false }));
-    runSingle(key, prompts[key], maxes[key], full).then(() => {
-      setDone(p => ({ ...p, [key]: true }));
+    runSingle(key, prompts[key], maxes[key], full);
+  };
+
+  const openMissingModal = async (desc, fullTag) => {
+    setMissingModal({ desc, fullTag });
+    setMissingSelected([]); setMissingFreeText('');
+    setMissingLoadingOpts(true); setMissingOptions([]);
+    try {
+      const sys = MISSING_OPTIONS_PROMPT.replace('{DESC}', desc);
+      const raw = await callClaude(sys, 'צור אפשרויות למילוי השדה.', 500);
+      const m = raw.match(/\{[\s\S]*\}/);
+      if (m) { const p = JSON.parse(m[0]); setMissingOptions(p.options || []); }
+    } catch { setMissingOptions([]); }
+    finally { setMissingLoadingOpts(false); }
+  };
+
+  const closeMissingModal = () => { setMissingModal(null); setMissingOptions([]); setMissingSelected([]); setMissingFreeText(''); };
+
+  const saveMissingFill = () => {
+    if (!missingModal) return;
+    const combined = [...missingSelected, missingFreeText.trim()].filter(Boolean).join(', ');
+    if (!combined) { closeMissingModal(); return; }
+    setPendingFills(p => ({ ...p, [missingModal.fullTag]: combined }));
+    closeMissingModal();
+  };
+
+  const hasPendingFills = Object.keys(pendingFills).length > 0;
+
+  const applyAllFills = async () => {
+    setUpdating(true);
+    let updatedIntake = results.intake;
+    Object.entries(pendingFills).forEach(([tag, val]) => {
+      updatedIntake = updatedIntake.split(tag).join(val);
     });
+    try {
+      const userMsg = 'קבלה מעודכנת עם מילויים:\n\n' + updatedIntake;
+      const [newIntake, newMono, newTreat] = await Promise.all([
+        callClaude(REVISE_INTAKE_PROMPT, userMsg, 4000),
+        callClaude(MONOLOGUE_PROMPT, 'בסס על הקבלה הבאה:\n\n' + updatedIntake, 1000),
+        callClaude(TREATMENT_PROMPT, 'בסס על הקבלה הבאה:\n\n' + updatedIntake, 4000),
+      ]);
+      setResults({ intake: newIntake, monologue: newMono, treatment: newTreat });
+      setPendingFills({});
+    } catch (e) {
+      setResults(p => ({ ...p, intake: updatedIntake }));
+      setPendingFills({});
+      setGlobalError('עדכון חלקי - הקבלה עודכנה אך ההצגה והתוכנית לא עודכנו.');
+    } finally { setUpdating(false); }
   };
 
   const handleRevise = async () => {
@@ -312,25 +349,24 @@ export default function App() {
       const text = await callClaude(REVISE_INTAKE_PROMPT, userMsg, 4000);
       setResults(p => ({ ...p, intake: text }));
       setReviseNote('');
-    } catch (e) {
-      setGlobalError('שגיאה בתיקון. הקבלה הקיימת נשמרה.');
-    } finally {
-      setRevising(false);
-    }
+    } catch { setGlobalError('שגיאה בתיקון. הקבלה הקיימת נשמרה.'); }
+    finally { setRevising(false); }
   };
 
   const handleCopy = async key => {
-    try { await navigator.clipboard.writeText(results[key]); setCopied(key); setTimeout(() => setCopied(''), 2500); }
-    catch { setGlobalError('לא הצליח להעתיק'); }
+    try {
+      await navigator.clipboard.writeText(cleanMissing(results[key]));
+      setCopied(key); setTimeout(() => setCopied(''), 2500);
+    } catch { setGlobalError('לא הצליח להעתיק'); }
   };
 
   const handleSendEmail = () => {
     if (!emailAddr.trim()) return;
     const subject = encodeURIComponent('קבלת מיון פסיכיאטרית');
     const body = encodeURIComponent(
-      'קבלת מיון:\n\n' + results.intake +
-      '\n\n---\n\nהצגה לבכיר:\n' + results.monologue +
-      '\n\n---\n\nתוכנית טיפול:\n' + results.treatment
+      'קבלת מיון:\n\n' + cleanMissing(results.intake) +
+      '\n\n---\n\nהצגה לבכיר:\n' + cleanMissing(results.monologue) +
+      '\n\n---\n\nתוכנית טיפול:\n' + cleanMissing(results.treatment)
     );
     window.location.href = 'mailto:' + emailAddr.trim() + '?subject=' + subject + '&body=' + body;
     setEmailMode(false);
@@ -344,19 +380,34 @@ export default function App() {
     setErrors({ intake: '', monologue: '', treatment: '' });
     setReviseNote(''); setEmailMode(false); setEmailAddr('');
     setGlobalError(null); setConfirmReset(false);
+    setPendingFills({}); setMissingModal(null);
     savedInput.current = ''; savedAnswers.current = {};
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const restoreInput = () => {
-    setInput(savedInput.current);
-    setAnswers(savedAnswers.current);
-    setStage('input');
-    setGlobalError(null);
-  };
-
+  const restoreInput = () => { setInput(savedInput.current); setAnswers(savedAnswers.current); setStage('input'); setGlobalError(null); };
   const allDone = done.intake && done.monologue && done.treatment;
   const hasError = errors.intake || errors.monologue || errors.treatment;
+  const missingCount = results.intake ? (results.intake.match(/\[\[חסר:[^\]]*\]\]/g) || []).length : 0;
+  const filledCount = Object.keys(pendingFills).length;
+  const IntakeText = ({ text }) => {
+    const parts = parseMissing(text);
+    return (
+      <p className="out" style={{ margin: 0 }}>
+        {parts.map((part, i) => {
+          if (part.type === 'text') return <span key={i}>{part.content}</span>;
+          const isFilled = pendingFills[part.full];
+          return (
+            <button key={i} onClick={() => openMissingModal(part.desc, part.full)}
+              style={{ display: 'inline', background: isFilled ? '#D1FAE5' : '#FEF2F2', border: isFilled ? '1px solid #6EE7A0' : '1px solid #FECACA', borderRadius: 6, padding: '1px 6px', margin: '0 2px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: isFilled ? '#065F46' : '#B91C1C', verticalAlign: 'middle', lineHeight: 1.4 }}>
+              {isFilled ? 'v ' + pendingFills[part.full] : '⚠️ ' + part.desc}
+            </button>
+          );
+        })}
+      </p>
+    );
+  };
+
   return (
     <div dir="rtl" style={{ fontFamily: "Heebo, system-ui, sans-serif", minHeight: '100vh', background: C.bg }}>
       <style>{`
@@ -372,7 +423,58 @@ export default function App() {
         .recpulse{animation:rp 1.6s ease-in-out infinite}
         @keyframes rp{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 14px rgba(220,38,38,0)}}
         textarea:focus,button:focus,input:focus{outline:none}button{cursor:pointer}
+        .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+        .modal{background:white;border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:680px;max-height:80vh;overflow-y:auto}
       `}</style>
+
+      {missingModal && (
+        <div className="overlay" onClick={e => { if (e.target === e.currentTarget) closeMissingModal(); }}>
+          <div className="modal">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontFamily: "Frank Ruhl Libre, serif", color: C.dark }}>
+                {missingModal.desc}
+              </h3>
+              <button onClick={closeMissingModal} style={{ border: 'none', background: 'none', fontSize: 22, color: C.mute, padding: 4 }}>x</button>
+            </div>
+
+            {missingLoadingOpts ? (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 8 }}>
+                  {[0,1,2].map(i => <div key={i} className="dot" style={{ width: 8, height: 8, borderRadius: '50%', background: C.primary, animationDelay: i*0.2+'s' }} />)}
+                </div>
+                <p style={{ color: C.mute, fontSize: 14 }}>מייצר אפשרויות...</p>
+              </div>
+            ) : (
+              <>
+                {missingOptions.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                    {missingOptions.map((opt, i) => {
+                      const sel = missingSelected.includes(opt);
+                      return (
+                        <button key={i} onClick={() => setMissingSelected(p => sel ? p.filter(x => x !== opt) : [...p, opt])}
+                          style={{ padding: '10px 14px', borderRadius: 12, textAlign: 'right', fontSize: 14, border: sel ? '2px solid '+C.primary : '1px solid '+C.borderSoft, background: sel ? C.info : 'white', color: sel ? C.dark : '#444', fontWeight: sel ? 600 : 400 }}>
+                          {sel ? 'v ' : ''}{opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                <textarea
+                  value={missingFreeText}
+                  onChange={e => setMissingFreeText(e.target.value)}
+                  placeholder="או כתוב בחופשיות..."
+                  rows={2}
+                  style={{ width: '100%', padding: 12, fontSize: 14, borderRadius: 12, border: '1px solid '+C.borderSoft, resize: 'none', color: C.text, lineHeight: 1.6, marginBottom: 12 }}
+                />
+                <button onClick={saveMissingFill} disabled={!missingSelected.length && !missingFreeText.trim()}
+                  style={{ width: '100%', padding: 14, borderRadius: 14, border: 'none', background: !missingSelected.length && !missingFreeText.trim() ? '#E5E2DB' : 'linear-gradient(135deg,'+C.primary+','+C.dark+')', color: 'white', fontSize: 15, fontWeight: 700 }}>
+                  שמור
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div ref={topRef} style={{ background: 'linear-gradient(135deg,'+C.dark+','+C.primary+')', color: 'white', padding: '24px 20px 20px', textAlign: 'center' }}>
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
@@ -397,39 +499,25 @@ export default function App() {
                 <button onClick={restoreInput} style={{ fontSize: 13, fontWeight: 600, color: C.primary, border: 'none', background: 'none', padding: '4px 8px' }}>שחזר</button>
               </div>
             )}
-
             <div style={{ background: 'white', borderRadius: 20, border: '1px solid '+C.borderSoft, overflow: 'hidden', marginBottom: 10 }}>
-              <textarea
-                value={input + (interim ? ' ' + interim : '')}
-                onChange={e => { if (!isRec) setInput(e.target.value); }}
-                placeholder="תאר את המקרה - מי הגיע, למה, מה קרה, מצבו, תרופות, רקע."
-                disabled={isRec}
-                rows={9}
-                style={{ width: '100%', padding: 16, fontSize: 16, border: 'none', resize: 'none', background: 'transparent', color: C.text, lineHeight: 1.7 }}
-              />
+              <textarea value={input + (interim ? ' '+interim : '')} onChange={e => { if (!isRec) setInput(e.target.value); }}
+                placeholder="תאר את המקרה - מי הגיע, למה, מה קרה, מצבו, תרופות, רקע." disabled={isRec} rows={9}
+                style={{ width: '100%', padding: 16, fontSize: 16, border: 'none', resize: 'none', background: 'transparent', color: C.text, lineHeight: 1.7 }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid '+C.borderSoft, background: C.info }}>
                 <span style={{ fontSize: 12, color: C.mute }}>{input.length} תווים</span>
                 {input && <button onClick={() => setInput('')} style={{ fontSize: 12, color: C.primary, border: 'none', background: 'none', padding: '4px 8px', fontWeight: 500 }}>ניקוי</button>}
               </div>
             </div>
-
             <button onClick={toggleRec} className={isRec ? 'recpulse' : ''}
               style={{ width: '100%', padding: 16, borderRadius: 16, border: isRec ? 'none' : '2px solid '+C.border, background: isRec ? C.danger : 'white', color: isRec ? 'white' : C.text, fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
               <span style={{ fontSize: 20 }}>{isRec ? '⏹' : '🎙️'}</span>
               {isRec ? 'עצור הקלטה' : 'הקלט הסבר על המקרה'}
             </button>
-
             <div style={{ background: C.info, borderRadius: 14, padding: '10px 14px', marginBottom: 16, display: 'flex', gap: 10 }}>
               <span style={{ fontSize: 18 }}>⌨️</span>
               <span style={{ fontSize: 13, color: C.infoText, lineHeight: 1.5 }}>iPhone: לחץ על תיבת הטקסט, לחץ על המיקרופון ליד מקש הרווח, ודבר.</span>
             </div>
-
-            {globalError && (
-              <div style={{ background: C.dangerBg, border: '1px solid '+C.dangerBorder, borderRadius: 12, padding: '12px 16px', fontSize: 14, color: C.dangerText, marginBottom: 12 }}>
-                {globalError}
-              </div>
-            )}
-
+            {globalError && <div style={{ background: C.dangerBg, border: '1px solid '+C.dangerBorder, borderRadius: 12, padding: '12px 16px', fontSize: 14, color: C.dangerText, marginBottom: 12 }}>{globalError}</div>}
             <button onClick={handleGetQuestions} disabled={!input.trim() || isRec}
               style={{ width: '100%', padding: 18, borderRadius: 18, border: 'none', background: !input.trim() || isRec ? '#E5E2DB' : 'linear-gradient(135deg,'+C.primary+','+C.dark+')', color: 'white', fontSize: 17, fontWeight: 700 }}>
               המשך לשאלות הבהרה
@@ -454,7 +542,6 @@ export default function App() {
                 <h2 style={{ margin: 0, fontSize: 20, fontFamily: "Frank Ruhl Libre, serif", fontWeight: 700 }}>שאלות הבהרה</h2>
               </div>
               <p style={{ margin: '0 0 20px', fontSize: 13, color: C.mute, textAlign: 'center' }}>ענה על מה שאפשר. ניתן לדלג.</p>
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {questions.map((q, idx) => (
                   <div key={q.id} style={{ borderBottom: idx < questions.length-1 ? '1px solid '+C.borderSoft : 'none', paddingBottom: 20 }}>
@@ -476,29 +563,21 @@ export default function App() {
                           })}
                         </div>
                       )}
-                      <textarea
-                        value={q.type === 'open' ? (answers[q.id] || '') : ''}
-                        onChange={e => setAnswers(p => ({ ...p, [q.id]: e.target.value }))}
-                        placeholder={q.type === 'mcq' ? 'הערה נוספת (אופציונלי)...' : 'תשובה חופשית...'}
-                        rows={q.type === 'open' ? 2 : 1}
-                        style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid '+C.borderSoft, fontSize: 13, color: '#555', resize: 'none', width: '100%' }}
-                      />
+                      <textarea value={q.type === 'open' ? (answers[q.id] || '') : ''} onChange={e => setAnswers(p => ({ ...p, [q.id]: e.target.value }))}
+                        placeholder={q.type === 'mcq' ? 'הערה נוספת (אופציונלי)...' : 'תשובה חופשית...'} rows={q.type === 'open' ? 2 : 1}
+                        style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid '+C.borderSoft, fontSize: 13, color: '#555', resize: 'none', width: '100%' }} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            <button onClick={handleGenerate}
-              style={{ width: '100%', padding: 18, borderRadius: 18, border: 'none', background: 'linear-gradient(135deg,'+C.primary+','+C.dark+')', color: 'white', fontSize: 17, fontWeight: 700, marginBottom: 8 }}>
+            <button onClick={handleGenerate} style={{ width: '100%', padding: 18, borderRadius: 18, border: 'none', background: 'linear-gradient(135deg,'+C.primary+','+C.dark+')', color: 'white', fontSize: 17, fontWeight: 700, marginBottom: 8 }}>
               צור קבלה + הצגה + תוכנית
             </button>
-            <button onClick={handleGenerate}
-              style={{ width: '100%', padding: 12, borderRadius: 14, border: '1px solid '+C.border, background: 'white', color: C.mute, fontSize: 14, marginBottom: 6 }}>
+            <button onClick={handleGenerate} style={{ width: '100%', padding: 12, borderRadius: 14, border: '1px solid '+C.border, background: 'white', color: C.mute, fontSize: 14, marginBottom: 6 }}>
               דלג על השאלות וצור ישירות
             </button>
-            <button onClick={() => setStage('input')}
-              style={{ width: '100%', padding: 10, border: 'none', background: 'none', color: C.mute, fontSize: 13 }}>
+            <button onClick={() => setStage('input')} style={{ width: '100%', padding: 10, border: 'none', background: 'none', color: C.mute, fontSize: 13 }}>
               חזור לעריכת הקלט
             </button>
           </div>
@@ -509,8 +588,7 @@ export default function App() {
               <div style={{ background: 'linear-gradient(135deg,'+C.dark+','+C.primary+')', borderRadius: 16, padding: '14px 18px', marginBottom: 14, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', color: 'white' }}>
                 {Object.entries(TABS).map(([key, { label }]) => (
                   <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: done[key] ? '#FBCFE8' : 'rgba(255,255,255,0.6)', fontSize: 13 }}>
-                    {loading[key] ? <span className="spin">o</span> : done[key] ? 'v' : 'o'}
-                    {label}
+                    {loading[key] ? <span className="spin">o</span> : done[key] ? 'v' : 'o'} {label}
                   </span>
                 ))}
                 <span style={{ fontSize: 12, opacity: 0.7, marginRight: 'auto' }}>עובד ברקע...</span>
@@ -520,9 +598,13 @@ export default function App() {
             {hasError && (
               <div style={{ background: C.dangerBg, border: '1px solid '+C.dangerBorder, borderRadius: 14, padding: '12px 16px', marginBottom: 12 }}>
                 <p style={{ margin: '0 0 8px', fontSize: 13, color: C.dangerText, fontWeight: 600 }}>חלק מהפלטים נכשלו. הקלט שלך נשמר.</p>
-                <button onClick={restoreInput} style={{ fontSize: 13, color: C.primary, border: 'none', background: 'none', padding: 0, fontWeight: 600 }}>
-                  חזור לעריכה ונסה שוב
-                </button>
+                <button onClick={restoreInput} style={{ fontSize: 13, color: C.primary, border: 'none', background: 'none', padding: 0, fontWeight: 600 }}>חזור לעריכה</button>
+              </div>
+            )}
+
+            {globalError && (
+              <div style={{ background: C.dangerBg, border: '1px solid '+C.dangerBorder, borderRadius: 12, padding: '12px 16px', fontSize: 14, color: C.dangerText, marginBottom: 12 }}>
+                {globalError}
               </div>
             )}
 
@@ -535,6 +617,21 @@ export default function App() {
               ))}
             </div>
 
+            {missingCount > 0 && activeTab === 'intake' && (
+              <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '12px 16px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <span style={{ fontSize: 13, color: '#92400E' }}>
+                  {missingCount - filledCount > 0 ? (missingCount - filledCount) + ' שדות חסרים' : 'כל השדות מולאו'}
+                  {filledCount > 0 && missingCount - filledCount > 0 ? ' (' + filledCount + ' מולאו)' : ''}
+                </span>
+                {hasPendingFills && (
+                  <button onClick={applyAllFills} disabled={updating}
+                    style={{ padding: '8px 18px', borderRadius: 12, border: 'none', background: updating ? '#E5E2DB' : 'linear-gradient(135deg,'+C.primary+','+C.dark+')', color: 'white', fontSize: 13, fontWeight: 700 }}>
+                    {updating ? 'מעדכן...' : 'עדכן הכל'}
+                  </button>
+                )}
+              </div>
+            )}
+
             {Object.entries(TABS).map(([key, { label }]) => (
               <div key={key} style={{ display: activeTab === key ? 'block' : 'none' }}>
                 {!done[key] ? (
@@ -545,9 +642,9 @@ export default function App() {
                     <p style={{ color: C.mute, fontSize: 15 }}>מייצר {label}...</p>
                   </div>
                 ) : errors[key] ? (
-                  <div style={{ background: C.dangerBg, border: '1px solid '+C.dangerBorder, borderRadius: 20, padding: '24px', textAlign: 'center' }}>
+                  <div style={{ background: C.dangerBg, border: '1px solid '+C.dangerBorder, borderRadius: 20, padding: 24, textAlign: 'center' }}>
                     <p style={{ color: C.dangerText, fontSize: 15, margin: '0 0 12px' }}>שגיאה ביצירת {label}</p>
-                    <p style={{ color: C.mute, fontSize: 13, margin: '0 0 16px' }}>הקלט שלך נשמר ולא ימחק.</p>
+                    <p style={{ color: C.mute, fontSize: 13, margin: '0 0 16px' }}>הקלט שלך נשמר.</p>
                     <button onClick={() => handleRetry(key)}
                       style={{ padding: '10px 24px', borderRadius: 12, border: 'none', background: C.primary, color: 'white', fontSize: 14, fontWeight: 600 }}>
                       נסה שוב
@@ -563,20 +660,15 @@ export default function App() {
                       </button>
                     </div>
                     <div style={{ background: 'white', borderRadius: 20, border: '1px solid '+C.borderSoft, padding: '20px 22px', boxShadow: '0 1px 3px rgba(157,23,77,.05)' }}>
-                      <p className="out">{results[key]}</p>
+                      {key === 'intake' ? <IntakeText text={results.intake} /> : <p className="out" style={{ margin: 0 }}>{results[key]}</p>}
                     </div>
 
                     {key === 'intake' && (
                       <div style={{ marginTop: 16, background: 'white', borderRadius: 20, border: '1px solid '+C.borderSoft, padding: 16 }}>
                         <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 600, color: C.dark }}>הערות ותיקונים לקבלה</p>
-                        <textarea
-                          value={reviseNote}
-                          onChange={e => setReviseNote(e.target.value)}
-                          placeholder="כתוב מה לתקן או להוסיף..."
-                          rows={3}
-                          disabled={revising}
-                          style={{ width: '100%', padding: 12, fontSize: 14, borderRadius: 12, border: '1px solid '+C.borderSoft, resize: 'none', color: C.text, lineHeight: 1.6, background: revising ? '#F9FAFB' : 'white' }}
-                        />
+                        <textarea value={reviseNote} onChange={e => setReviseNote(e.target.value)}
+                          placeholder="כתוב מה לתקן או להוסיף..." rows={3} disabled={revising}
+                          style={{ width: '100%', padding: 12, fontSize: 14, borderRadius: 12, border: '1px solid '+C.borderSoft, resize: 'none', color: C.text, lineHeight: 1.6, background: revising ? '#F9FAFB' : 'white' }} />
                         <button onClick={handleRevise} disabled={!reviseNote.trim() || revising}
                           style={{ width: '100%', marginTop: 10, padding: 12, borderRadius: 12, border: 'none', background: !reviseNote.trim() || revising ? '#E5E2DB' : 'linear-gradient(135deg,'+C.primary+','+C.dark+')', color: 'white', fontSize: 14, fontWeight: 600 }}>
                           {revising ? 'מייצר קבלה מתוקנת...' : 'תקן את הקבלה'}
@@ -598,13 +690,9 @@ export default function App() {
                 ) : (
                   <div style={{ background: 'white', borderRadius: 16, border: '1px solid '+C.borderSoft, padding: 14, marginBottom: 10 }}>
                     <p style={{ margin: '0 0 8px', fontSize: 13, color: C.mute }}>שלח את כל הפלטים למייל:</p>
-                    <input
-                      type="email"
-                      value={emailAddr}
-                      onChange={e => setEmailAddr(e.target.value)}
+                    <input type="email" value={emailAddr} onChange={e => setEmailAddr(e.target.value)}
                       placeholder="your@email.com"
-                      style={{ width: '100%', padding: 10, fontSize: 14, borderRadius: 10, border: '1px solid '+C.borderSoft, marginBottom: 8, direction: 'ltr', textAlign: 'left' }}
-                    />
+                      style={{ width: '100%', padding: 10, fontSize: 14, borderRadius: 10, border: '1px solid '+C.borderSoft, marginBottom: 8, direction: 'ltr', textAlign: 'left' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={handleSendEmail} disabled={!emailAddr.trim()}
                         style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: !emailAddr.trim() ? '#E5E2DB' : C.primary, color: 'white', fontSize: 14, fontWeight: 600 }}>
@@ -617,11 +705,9 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
                 <p style={{ fontSize: 11, color: C.mute, lineHeight: 1.6, margin: '0 0 12px', textAlign: 'center' }}>
                   פלט AI - דורש קריאה ואימות לפני שימוש קליני. כל מינון או תרופה - לאמת מול מקור מוסמך.
                 </p>
-
                 {!confirmReset ? (
                   <button onClick={() => setConfirmReset(true)}
                     style={{ width: '100%', padding: 14, borderRadius: 16, border: '1px solid '+C.border, background: 'white', color: C.mute, fontSize: 15, fontWeight: 500 }}>
